@@ -606,11 +606,7 @@ class ThermalEngine:
         }
 
         # 10. Format entity extra attributes
-        window_mode = (
-            "sensor"
-            if inputs.has_window_sensor
-            else ("auto (ac off = open)" if inputs.window_is_open else "auto (ac on = closed)")
-        )
+        window_mode = "sensor" if inputs.has_window_sensor else "no_sensor"
         curtains_state = "Closed" if inputs.curtains_closed else "Open"
 
         extra_attributes: dict[str, dict[str, Any]] = {
@@ -644,6 +640,8 @@ class ThermalEngine:
                 "wind_dir_deg": round(inputs.wind_dir_deg, 1) if inputs.has_wind_dir_sensor else None,
                 "window_azimuth": round(inputs.window_azimuth, 1),
                 "ventilation_ach": round(result.ventilation_ach, 2),
+                "recommend_open_window": rec_open_window,
+                "recommend_close_curtains": rec_close_curtains,
             },
             SENSOR_INSTANT_NET_BALANCE: {
                 "p_env_w": round(result.p_env, 1),

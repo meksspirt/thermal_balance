@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,6 +16,8 @@ from .const import BUTTON_RESET_DAILY, BUTTON_RESET_K_FACTOR, DOMAIN
 from .coordinator import ThermalBalanceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES: Final = 0
 
 
 async def async_setup_entry(
@@ -42,17 +45,14 @@ class ThermalBalanceButtonBase(
         coordinator: ThermalBalanceCoordinator,
         entry: ConfigEntry,
         key: str,
-        name: str,
-        icon: str,
     ) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator)
         self.entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_has_entity_name = True
-        self._attr_name = name
         self._attr_translation_key = key
-        self._attr_icon = icon
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -74,8 +74,6 @@ class ThermalBalanceResetDailyButton(ThermalBalanceButtonBase):
             coordinator=coordinator,
             entry=entry,
             key=BUTTON_RESET_DAILY,
-            name="Reset Daily Counters",
-            icon="mdi:restore",
         )
 
     async def async_press(self) -> None:
@@ -97,8 +95,6 @@ class ThermalBalanceResetKFactorButton(ThermalBalanceButtonBase):
             coordinator=coordinator,
             entry=entry,
             key=BUTTON_RESET_K_FACTOR,
-            name="Reset K-Factor Calibration",
-            icon="mdi:refresh-auto",
         )
 
     async def async_press(self) -> None:

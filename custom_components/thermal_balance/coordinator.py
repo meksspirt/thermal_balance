@@ -81,6 +81,34 @@ from .const import (
     SENSOR_TIME_TO_1DEG,
     SENSOR_TOTAL_HEAT_ABSORBED,
 )
+
+RELOAD_CONFIG_KEYS = {
+    CONF_ROOM_AREA,
+    CONF_CEILING_HEIGHT,
+    CONF_WINDOW_AREA,
+    CONF_EXTERNAL_WALLS_FRACTION,
+    CONF_U_WALL,
+    CONF_U_WINDOW,
+    CONF_WINDOW_AZIMUTH,
+    CONF_USE_EMPIRICAL_HLC,
+    CONF_AC_MAX_COOLING,
+    CONF_AC_AIRFLOW,
+    CONF_ILLUMINANCE_THRESHOLD,
+    CONF_CURRENCY_SYMBOL,
+    CONF_SENSOR_T_IN,
+    CONF_SENSOR_T_OUT,
+    CONF_SENSOR_AC_POWER,
+    CONF_SENSOR_CLIMATE,
+    CONF_SENSOR_SOLAR,
+    CONF_SENSOR_WEATHER,
+    CONF_SENSOR_WINDOW,
+    CONF_SENSOR_ILLUMINANCE,
+    CONF_SENSOR_T_AC_EXIT,
+    CONF_SENSOR_RH_IN,
+    CONF_SENSOR_RH_OUT,
+    CONF_SENSOR_WIND_SPEED,
+    CONF_SENSOR_WIND_DIRECTION,
+}
 from .engine import (
     EngineCycleInputs,
     ThermalEngine,
@@ -179,6 +207,9 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.curtain_type: str = str(options.get(CONF_CURTAIN_TYPE, data.get(CONF_CURTAIN_TYPE, DEFAULT_CURTAIN_TYPE)))
         self.use_empirical_hlc: bool = bool(options.get(CONF_USE_EMPIRICAL_HLC, data.get(CONF_USE_EMPIRICAL_HLC, DEFAULT_USE_EMPIRICAL_HLC)))
 
+        # Snapshot options requiring integration reload vs live in-place update
+        self._config_signature = {k: options.get(k, data.get(k)) for k in RELOAD_CONFIG_KEYS}
+
         # Pure Python Domain Engine
         self.engine: ThermalEngine = ThermalEngine(self.geometry)
 
@@ -203,6 +234,8 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # State and attribute storage
         self.extra_attributes: dict[str, dict[str, Any]] = {}
         self._unsub_track: list[Any] = []
+        self._unavailable_mandatory_sensors: set[str] = set()
+        self.last_update_success: bool = True
 
         self.data: dict[str, Any] = {
             SENSOR_INSTANT_HEAT_GAIN: 0.0,
@@ -224,6 +257,23 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             BINARY_SENSOR_RECOMMEND_CLOSE_CURTAINS: False,
             BINARY_SENSOR_INSUFFICIENT_COOLING_CAPACITY: False,
         }
+
+    def check_options_need_reload(self, new_options: dict[str, Any]) -> bool:
+        """Check if newly updated options require reloading the entire integration."""
+        for key in RELOAD_CONFIG_KEYS:
+            if key in new_options and new_options[key] != self._config_signature.get(key):
+                return True
+        return False
+
+    def update_runtime_options(self, new_options: dict[str, Any]) -> None:
+        """Update runtime configurable options without reloading."""
+        if CONF_HVAC_MODE in new_options:
+            self.hvac_mode = str(new_options[CONF_HVAC_MODE])
+        if CONF_CURTAIN_TYPE in new_options:
+            self.curtain_type = str(new_options[CONF_CURTAIN_TYPE])
+        if CONF_ELECTRICITY_RATE in new_options:
+            self.electricity_rate = _safe_float(new_options[CONF_ELECTRICITY_RATE], self.electricity_rate)
+        self.recalculate()
 
     # Backward-compatible property delegates for energy accumulators
     @property
@@ -474,6 +524,20 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _read_initial_states(self) -> None:
         """Read initial state of sensors from Hass state machine."""
+        mandatory = (self.sensor_t_in, self.sensor_t_out, self.sensor_ac_power)
+        self._unavailable_mandatory_sensors.clear()
+        for eid in mandatory:
+            state = self.hass.states.get(eid)
+            if state is None or state.state in ("unknown", "unavailable"):
+                self._unavailable_mandatory_sensors.add(eid)
+                _LOGGER.warning(
+                    "Mandatory sensor %s is unavailable (state: %s)",
+                    eid,
+                    getattr(state, "state", None),
+                )
+
+        self.last_update_success = len(self._unavailable_mandatory_sensors) == 0
+
         self.t_in_val = self._get_float_state(self.sensor_t_in, 20.0)
         self.t_out_val = self._get_float_state(self.sensor_t_out, 20.0)
         self.t_ac_exit_val = self._get_float_state(self.sensor_t_ac_exit, self.t_in_val)
@@ -485,7 +549,7 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.has_window_sensor:
             self.window_is_open = self._get_bool_state(self.sensor_window, False)
         else:
-            self.window_is_open = (self.ac_power_val < 20.0)
+            self.window_is_open = False
 
         if self.has_illuminance_sensor:
             self.illuminance_val = self._get_float_state(self.sensor_illuminance, 500.0)
@@ -526,6 +590,30 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle state change event for tracked sensors."""
         entity_id = event.data.get("entity_id")
         new_state = event.data.get("new_state")
+
+        mandatory = (self.sensor_t_in, self.sensor_t_out, self.sensor_ac_power)
+        if entity_id in mandatory:
+            if new_state is None or new_state.state in ("unknown", "unavailable"):
+                if entity_id not in self._unavailable_mandatory_sensors:
+                    self._unavailable_mandatory_sensors.add(entity_id)
+                    _LOGGER.warning(
+                        "Mandatory sensor %s became unavailable (state: %s)",
+                        entity_id,
+                        getattr(new_state, "state", None),
+                    )
+                self.last_update_success = False
+                self.async_update_listeners()
+                return
+
+            if entity_id in self._unavailable_mandatory_sensors:
+                self._unavailable_mandatory_sensors.remove(entity_id)
+                _LOGGER.info(
+                    "Mandatory sensor %s recovered and is now available (state: %s)",
+                    entity_id,
+                    new_state.state,
+                )
+                if not self._unavailable_mandatory_sensors:
+                    self.last_update_success = True
 
         if new_state is None or new_state.state in ("unknown", "unavailable"):
             return
@@ -578,7 +666,7 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.has_window_sensor:
             self.window_is_open = self._get_bool_state(self.sensor_window, False)
         else:
-            self.window_is_open = (self.ac_power_val < 20.0)
+            self.window_is_open = False
 
         # Daylight and Solar Position
         is_sun_above_horizon = False
@@ -682,4 +770,8 @@ class ThermalBalanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.extra_attributes = cycle_output.extra_attributes
 
         # Notify all CoordinatorEntity instances
-        self.async_set_updated_data(self.data)
+        if self._unavailable_mandatory_sensors:
+            self.last_update_success = False
+            self.async_update_listeners()
+        else:
+            self.async_set_updated_data(self.data)

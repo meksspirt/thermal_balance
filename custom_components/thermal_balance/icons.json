@@ -27,14 +27,59 @@
       }
     },
     "sensor": {
+      "instant_heat_gain": {
+        "default": "mdi:solar-power-variant"
+      },
+      "ac_heat_output": {
+        "default": "mdi:snowflake"
+      },
+      "instant_net_balance": {
+        "default": "mdi:scale-balance"
+      },
+      "ac_carnot_cop": {
+        "default": "mdi:gauge"
+      },
+      "time_to_1deg": {
+        "default": "mdi:timer-outline"
+      },
+      "daily_thermal_balance": {
+        "default": "mdi:calendar-today"
+      },
+      "net_thermal_balance": {
+        "default": "mdi:chart-timeline-variant"
+      },
+      "total_heat_absorbed": {
+        "default": "mdi:fire"
+      },
+      "ac_thermal_energy_total": {
+        "default": "mdi:air-conditioner"
+      },
+      "ac_condensation_rate": {
+        "default": "mdi:water-percent"
+      },
+      "empirical_k_factor": {
+        "default": "mdi:home-thermometer"
+      },
       "equilibrium_temperature": {
         "default": "mdi:thermometer-water"
       },
       "required_ac_power": {
         "default": "mdi:lightning-bolt"
+      },
+      "ac_energy_cost": {
+        "default": "mdi:cash"
+      },
+      "shading_daily_savings": {
+        "default": "mdi:piggy-bank"
       }
     },
     "binary_sensor": {
+      "recommend_open_window": {
+        "default": "mdi:window-open-variant"
+      },
+      "recommend_close_curtains": {
+        "default": "mdi:curtains-closed"
+      },
       "insufficient_cooling_capacity": {
         "default": "mdi:alert-circle-outline"
       }

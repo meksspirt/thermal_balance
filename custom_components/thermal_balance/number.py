@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,6 +17,8 @@ from .const import DOMAIN, NUMBER_ELECTRICITY_RATE
 from .coordinator import ThermalBalanceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES: Final = 0
 
 
 async def async_setup_entry(
@@ -49,9 +52,8 @@ class ThermalBalanceElectricityRateNumber(
         self.entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{NUMBER_ELECTRICITY_RATE}"
         self._attr_has_entity_name = True
-        self._attr_name = "Electricity Rate"
         self._attr_translation_key = NUMBER_ELECTRICITY_RATE
-        self._attr_icon = "mdi:currency-usd"
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -72,15 +74,19 @@ class ThermalBalanceElectricityRateNumber(
     async def async_set_native_value(self, value: float) -> None:
         """Update electricity rate."""
         await self.coordinator.async_set_electricity_rate(value)
+        if self.entry and hasattr(self.hass, "config_entries") and hasattr(self.hass.config_entries, "async_update_entry"):
+            new_options = {**self.entry.options, NUMBER_ELECTRICITY_RATE: value}
+            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
 
     async def async_added_to_hass(self) -> None:
         """Restore state across HA restarts."""
         await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state not in ("unknown", "unavailable"):
-            try:
-                restored_val = float(last_state.state)
-                await self.coordinator.async_set_electricity_rate(restored_val)
-                _LOGGER.debug("Restored dynamic electricity rate: %s", restored_val)
-            except (ValueError, TypeError):
-                pass
+        if NUMBER_ELECTRICITY_RATE not in self.entry.options and NUMBER_ELECTRICITY_RATE not in self.entry.data:
+            last_state = await self.async_get_last_state()
+            if last_state is not None and last_state.state not in ("unknown", "unavailable"):
+                try:
+                    restored_val = float(last_state.state)
+                    await self.coordinator.async_set_electricity_rate(restored_val)
+                    _LOGGER.debug("Restored dynamic electricity rate: %s", restored_val)
+                except (ValueError, TypeError):
+                    pass

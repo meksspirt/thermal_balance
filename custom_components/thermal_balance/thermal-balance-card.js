@@ -10,6 +10,7 @@ const TRANSLATIONS = {
   en: {
     title: 'Thermal Balance',
     editor_title: 'Thermal Balance Configuration',
+    instance_selector: 'Room / Instance (Auto-detect)',
     compact_view: 'Compact Mode (Mobile)',
     card_title_label: 'Custom Card Title (Optional)',
     heat_gain_sensor: 'Heat Gain Sensor',
@@ -22,6 +23,11 @@ const TRANSLATIONS = {
     heat_absorbed_sensor: 'Heat Absorbed Sensor',
     ac_energy_sensor: 'AC Thermal Energy Sensor',
     condensation_rate_sensor: 'Condensation Rate Sensor',
+    empirical_k_factor_sensor: 'Empirical K-Factor Sensor',
+    ac_cost_sensor: 'AC Energy Cost Sensor',
+    daily_savings_sensor: 'Daily Shading Savings Sensor',
+    rec_open_window_sensor: 'Open Window Recommendation Sensor',
+    rec_close_curtains_sensor: 'Close Curtains Recommendation Sensor',
     heat_mode: 'Heat Mode',
     cool_mode: 'Cool Mode',
     stable: 'Stable',
@@ -42,14 +48,32 @@ const TRANSLATIONS = {
     curtains: 'Curtains',
     curtains_closed: 'Closed',
     curtains_open: 'Open',
+    curtains_note_no_sensor: 'Illuminance sensor not configured',
+    curtains_note_night: 'Night: auto curtain detection disabled (lux threshold not applied)',
     solar: 'Solar',
     walls: 'Walls',
     k_factor_actual: 'K-Factor (Actual)',
     insulation: 'Insulation',
     estimated: 'Estimated',
+    grade_excellent: 'Excellent (passport)',
+    grade_good: 'Good (moderate)',
+    grade_average: 'Average (thermal bridges)',
+    grade_poor: 'Poor (drafts)',
     window_open_k_note: 'Window is open — K-factor is unreliable',
     ac_cooling_perf: 'AC Cooling Performance',
     heating_perf: 'Heating Performance (Heat Pump)',
+    ac_dt: 'ΔT AC',
+    exit_temp_meas: 'Exit Temp (Meas)',
+    exit_temp: 'Exit Temp',
+    exit_temp_calc: 'Exit Temp (Calc)',
+    sensible_heat: 'Sensible',
+    sensible_heat_heating: 'Sensible Heat',
+    latent_heat: 'Latent',
+    shr: 'SHR',
+    enthalpy: 'Enthalpy',
+    airflow: 'Airflow',
+    dew_point_in: 'Dew Pt In',
+    dew_point_out: 'Dew Pt Out',
     trend_24h: '24h Thermal Trend',
     heat: 'Heat',
     cooling: 'Cooling',
@@ -64,10 +88,16 @@ const TRANSLATIONS = {
     shading_savings: 'Shading Savings',
     open_win_rec: 'Open Window Recommended! Outdoor air is cooler than indoor. Open window for free cooling!',
     close_cur_rec: 'Close Curtains Recommended! High solar radiation. Close curtains to reduce heat gain & save energy.',
+    ms_unit: 'm/s',
+    per_hour: '/ h',
+    per_day: '/day',
+    hour_short: 'h',
+    min_short: 'min',
   },
   ru: {
     title: 'Thermal Balance',
     editor_title: 'Настройки Thermal Balance',
+    instance_selector: 'Комната / Экземпляр (Автовыбор)',
     compact_view: 'Компактный режим (для смартфонов)',
     card_title_label: 'Свой заголовок карточки (опционально)',
     heat_gain_sensor: 'Сенсор притока тепла (Heat Gain)',
@@ -80,6 +110,11 @@ const TRANSLATIONS = {
     heat_absorbed_sensor: 'Сенсор поглощенного тепла',
     ac_energy_sensor: 'Сенсор тепловой энергии AC',
     condensation_rate_sensor: 'Сенсор конденсата AC',
+    empirical_k_factor_sensor: 'Сенсор факт. K-фактора (K-Factor)',
+    ac_cost_sensor: 'Сенсор суточных затрат на AC',
+    daily_savings_sensor: 'Сенсор экономии от штор',
+    rec_open_window_sensor: 'Сенсор рекомендации открыть окно',
+    rec_close_curtains_sensor: 'Сенсор рекомендации закрыть шторы',
     heat_mode: 'Режим Обогрева',
     cool_mode: 'Режим Охлаждения',
     stable: 'Баланс',
@@ -100,14 +135,32 @@ const TRANSLATIONS = {
     curtains: 'Шторы',
     curtains_closed: 'Закрыты',
     curtains_open: 'Открыты',
+    curtains_note_no_sensor: 'Датчик освещенности не настроен',
+    curtains_note_night: 'Ночь: автоопределение штор отключено',
     solar: 'Солнце',
     walls: 'Стены',
     k_factor_actual: 'K-фактор (факт)',
     insulation: 'Изоляция',
-    estimated: 'Расчетный',
+    estimated: 'Расчетная',
+    grade_excellent: 'Отличная (по паспорту)',
+    grade_good: 'Хорошая (умеренно)',
+    grade_average: 'Средняя (мостики холода)',
+    grade_poor: 'Слабая (сквозняки / утечки)',
     window_open_k_note: 'Окно открыто — K-фактор недостоверен',
     ac_cooling_perf: 'Характеристики охлаждения AC',
     heating_perf: 'Характеристики обогрева (ТН)',
+    ac_dt: 'ΔT AC',
+    exit_temp_meas: 'Темп. выдува (факт)',
+    exit_temp: 'Темп. выдува',
+    exit_temp_calc: 'Темп. выдува (расч.)',
+    sensible_heat: 'Ощутимый холод',
+    sensible_heat_heating: 'Ощутимое тепло',
+    latent_heat: 'Скрытый холод (осушение)',
+    shr: 'SHR (ощут./полн.)',
+    enthalpy: 'Энтальпия',
+    airflow: 'Расход воздуха',
+    dew_point_in: 'Точка росы (комн.)',
+    dew_point_out: 'Точка росы (ул.)',
     trend_24h: 'Суточный тренд баланса',
     heat: 'Приток',
     cooling: 'Холод',
@@ -122,6 +175,11 @@ const TRANSLATIONS = {
     shading_savings: 'Экономия от штор',
     open_win_rec: 'Рекомендуется открыть окно! На улице прохладнее, чем в комнате — используйте бесплатное охлаждение.',
     close_cur_rec: 'Рекомендуется закрыть шторы! Высокая солнечная радиация — зашторьте окна для экономии энергии.',
+    ms_unit: 'м/с',
+    per_hour: '/ ч',
+    per_day: '/день',
+    hour_short: 'ч',
+    min_short: 'мин',
   }
 };
 
@@ -175,18 +233,93 @@ function loadECharts() {
   return window._echartsLoadingPromise;
 }
 
-function autoDiscoverEntities(hass) {
-  if (!hass || !hass.states) return {};
-  const discovered = {};
-  const allSensors = Object.keys(hass.states).filter(eid => eid.toLowerCase().startsWith('sensor.'));
+function autoDiscoverInstances(hass) {
+  if (!hass || !hass.states) return [];
+  const instances = [];
+  const seen = new Set();
+  const suffixes = SENSOR_MAP.heat_gain || ['_instant_heat_gain', '_heat_gain'];
 
-  for (const [key, suffixes] of Object.entries(SENSOR_MAP)) {
-    for (const eid of allSensors) {
-      const lower = eid.toLowerCase();
-      if (suffixes.some(suf => lower.endsWith(suf) || lower.includes(suf))) {
-        discovered[key] = eid;
+  for (const eid of Object.keys(hass.states)) {
+    const lower = eid.toLowerCase();
+    if (!lower.startsWith('sensor.')) continue;
+
+    for (const suf of suffixes) {
+      if (lower.endsWith(suf)) {
+        const withoutDomain = eid.substring('sensor.'.length);
+        const prefix = withoutDomain.substring(0, withoutDomain.length - suf.length).replace(/^_|_$/g, '');
+        if (!seen.has(prefix)) {
+          seen.add(prefix);
+          const stateObj = hass.states[eid];
+          let name = prefix || 'Thermal Balance';
+          if (stateObj && stateObj.attributes && stateObj.attributes.friendly_name) {
+            const fn = stateObj.attributes.friendly_name;
+            name = fn.replace(/(instant\s+heat\s+gain|heat\s+gain|приток\s+тепла)/gi, '').trim() || fn;
+          }
+          instances.push({ prefix, eid, name });
+        }
         break;
       }
+    }
+  }
+  return instances;
+}
+
+function derivePrefixFromEntity(eid) {
+  if (!eid || typeof eid !== 'string') return null;
+  const match = eid.replace(/^(sensor|binary_sensor)\./, '');
+  for (const suffixes of Object.values(SENSOR_MAP)) {
+    for (const suf of suffixes) {
+      if (match.endsWith(suf)) {
+        return match.substring(0, match.length - suf.length).replace(/^_|_$/g, '');
+      }
+    }
+  }
+  return null;
+}
+
+function autoDiscoverEntities(hass, preferredPrefix = null) {
+  if (!hass || !hass.states) return {};
+  const discovered = {};
+  const allSensors = Object.keys(hass.states).filter(eid => {
+    const lower = eid.toLowerCase();
+    return lower.startsWith('sensor.') || lower.startsWith('binary_sensor.');
+  });
+
+  let prefix = preferredPrefix;
+  if (prefix === null || prefix === undefined || prefix === '') {
+    const instances = autoDiscoverInstances(hass);
+    if (instances.length > 0) {
+      prefix = instances[0].prefix;
+    }
+  }
+
+  const prefixLower = prefix ? prefix.toLowerCase() : null;
+
+  for (const [key, suffixes] of Object.entries(SENSOR_MAP)) {
+    let matchedEid = null;
+
+    if (prefixLower) {
+      for (const eid of allSensors) {
+        const lower = eid.toLowerCase();
+        if (lower.includes(prefixLower) && suffixes.some(suf => lower.endsWith(suf) || lower.includes(suf))) {
+          matchedEid = eid;
+          break;
+        }
+      }
+    }
+
+    if (!matchedEid) {
+      for (const eid of allSensors) {
+        const lower = eid.toLowerCase();
+        if (suffixes.some(suf => lower.endsWith(suf) || lower.includes(suf))) {
+          matchedEid = eid;
+          break;
+        }
+      }
+    }
+
+    if (matchedEid) {
+      discovered[key] = matchedEid;
     }
   }
   return discovered;
@@ -202,20 +335,47 @@ class ThermalBalanceCardEditor extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this._config = {};
     this._hass = null;
+    this._rendered = false;
+    this._isSelfUpdating = false;
   }
 
   setConfig(config) {
+    const isFirst = !this._rendered;
+    const oldConfigStr = JSON.stringify(this._config || {});
+    const newConfigStr = JSON.stringify(config || {});
     this._config = { ...config };
-    this.render();
+
+    if (this._isSelfUpdating) {
+      this._isSelfUpdating = false;
+      return;
+    }
+
+    if (isFirst || oldConfigStr !== newConfigStr) {
+      this.render();
+    }
   }
 
   set hass(hass) {
+    const oldStates = this._hass && this._hass.states;
     this._hass = hass;
-    this.render();
+    if (!this._rendered) {
+      this.render();
+      return;
+    }
+    const newStates = hass && hass.states;
+    if (oldStates && newStates) {
+      const oldCount = Object.keys(oldStates).length;
+      const newCount = Object.keys(newStates).length;
+      if (oldCount !== newCount) {
+        this.render();
+      }
+    }
   }
 
   connectedCallback() {
-    this.render();
+    if (!this._rendered) {
+      this.render();
+    }
   }
 
   _t(key, defaultText = '') {
@@ -241,6 +401,13 @@ class ThermalBalanceCardEditor extends HTMLElement {
     }
 
     this._config = newConfig;
+    this._isSelfUpdating = true;
+
+    if (configKey === 'prefix' || configKey === 'room_prefix') {
+      this._isSelfUpdating = false;
+      this.render();
+    }
+
     const event = new CustomEvent('config-changed', {
       detail: { config: this._config },
       bubbles: true,
@@ -250,7 +417,18 @@ class ThermalBalanceCardEditor extends HTMLElement {
   }
 
   render() {
-    const auto = autoDiscoverEntities(this._hass);
+    this._rendered = true;
+    const active = this.shadowRoot ? this.shadowRoot.activeElement : null;
+    const activeKey = active ? active.getAttribute('configValue') : null;
+    const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+    const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+
+    const instances = autoDiscoverInstances(this._hass);
+    const selectedPrefix = this._config.prefix || this._config.room_prefix || '';
+    const autoPrefix = instances.length > 0 ? instances[0].prefix : '';
+    const activePrefix = selectedPrefix || autoPrefix;
+    const auto = autoDiscoverEntities(this._hass, activePrefix);
+
     const fields = [
       { key: 'heat_gain', label: this._t('heat_gain_sensor') },
       { key: 'ac_cooling', label: this._t('ac_cooling_sensor') },
@@ -262,11 +440,16 @@ class ThermalBalanceCardEditor extends HTMLElement {
       { key: 'heat_absorbed', label: this._t('heat_absorbed_sensor') },
       { key: 'ac_energy', label: this._t('ac_energy_sensor') },
       { key: 'condensation_rate', label: this._t('condensation_rate_sensor') },
+      { key: 'empirical_k_factor', label: this._t('empirical_k_factor_sensor') },
+      { key: 'ac_cost', label: this._t('ac_cost_sensor') },
+      { key: 'daily_savings', label: this._t('daily_savings_sensor') },
+      { key: 'rec_open_window', label: this._t('rec_open_window_sensor') },
+      { key: 'rec_close_curtains', label: this._t('rec_close_curtains_sensor') },
     ];
 
     const sensorEntities = (this._hass && this._hass.states)
       ? Object.keys(this._hass.states)
-          .filter(e => e.startsWith('sensor.'))
+          .filter(e => e.startsWith('sensor.') || e.startsWith('binary_sensor.'))
           .map(eid => {
             const stateObj = this._hass.states[eid];
             const fname = (stateObj && stateObj.attributes && stateObj.attributes.friendly_name);
@@ -306,6 +489,13 @@ class ThermalBalanceCardEditor extends HTMLElement {
         </div>
       `;
     }).join('');
+
+    const instanceOptions = [
+      `<option value="" ${selectedPrefix === '' ? 'selected' : ''}>Auto (${escapeHtml(instances.length > 0 ? (instances[0].name || instances[0].prefix) : 'Default')})</option>`,
+      ...instances.map(inst =>
+        `<option value="${escapeHtml(inst.prefix)}" ${selectedPrefix === inst.prefix ? 'selected' : ''}>${escapeHtml(inst.name)} (${escapeHtml(inst.prefix)})</option>`
+      )
+    ].join('');
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -373,6 +563,14 @@ class ThermalBalanceCardEditor extends HTMLElement {
           <input type="text" class="editor-input" configValue="title" value="${escapeHtml(this._config.title || '')}" placeholder="Thermal Balance"/>
         </div>
 
+        ${instances.length > 0 ? `
+        <div class="editor-row">
+          <label class="editor-label">${this._t('instance_selector')}</label>
+          <select class="editor-select" configValue="prefix">
+            ${instanceOptions}
+          </select>
+        </div>` : ''}
+
         ${fieldsHtml}
       </div>
     `;
@@ -384,6 +582,16 @@ class ThermalBalanceCardEditor extends HTMLElement {
         s.addEventListener('input', this._valueChanged.bind(this));
       }
     });
+
+    if (activeKey) {
+      const newActive = this.shadowRoot.querySelector(`[configValue="${activeKey}"]`);
+      if (newActive) {
+        newActive.focus();
+        if (selStart !== null && typeof newActive.setSelectionRange === 'function') {
+          newActive.setSelectionRange(selStart, selEnd);
+        }
+      }
+    }
   }
 }
 
@@ -414,7 +622,29 @@ class ThermalBalanceCard extends HTMLElement {
   }
 
   static getStubConfig(hass) {
-    return autoDiscoverEntities(hass);
+    const instances = autoDiscoverInstances(hass);
+    const prefix = instances.length > 0 ? instances[0].prefix : null;
+    return autoDiscoverEntities(hass, prefix);
+  }
+
+  static getGridOptions(hass, config) {
+    const isCompact = Boolean(config && (config.compact || config.compact_view));
+    return {
+      columns: 12,
+      rows: isCompact ? 4 : 6,
+      min_columns: 6,
+      min_rows: isCompact ? 3 : 4,
+    };
+  }
+
+  getGridOptions() {
+    const isCompact = Boolean(this._config && (this._config.compact || this._config.compact_view));
+    return {
+      columns: 12,
+      rows: isCompact ? 4 : 6,
+      min_columns: 6,
+      min_rows: isCompact ? 3 : 4,
+    };
   }
 
   setConfig(config) {
@@ -486,12 +716,42 @@ class ThermalBalanceCard extends HTMLElement {
     return (TRANSLATIONS[langCode] && TRANSLATIONS[langCode][key]) || (TRANSLATIONS.en && TRANSLATIONS.en[key]) || defaultText || key;
   }
 
+  _translateGrade(grade) {
+    if (!grade) return this._t('estimated');
+    const lower = String(grade).toLowerCase();
+    if (lower.includes('excellent')) return this._t('grade_excellent', grade);
+    if (lower.includes('good')) return this._t('grade_good', grade);
+    if (lower.includes('average')) return this._t('grade_average', grade);
+    if (lower.includes('poor')) return this._t('grade_poor', grade);
+    return grade;
+  }
+
+  _translateCurtainsNote(note) {
+    if (!note) return '';
+    const lower = String(note).toLowerCase();
+    if (lower.includes('not configured')) return this._t('curtains_note_no_sensor', note);
+    if (lower.includes('night')) return this._t('curtains_note_night', note);
+    return note;
+  }
+
   /* ─── Helpers for Entity Resolution ─── */
+
+  _derivePrefix() {
+    if (this._config && (this._config.prefix || this._config.room_prefix)) {
+      return this._config.prefix || this._config.room_prefix;
+    }
+    if (this._config && this._config.heat_gain) {
+      return derivePrefixFromEntity(this._config.heat_gain);
+    }
+    return null;
+  }
 
   _resolveEntity(key) {
     if (this._config && this._config[key]) return this._config[key];
-    if (!this._autoDiscovered && this._hass) {
-      this._autoDiscovered = autoDiscoverEntities(this._hass);
+    const prefix = this._derivePrefix();
+    if (!this._autoDiscovered || this._autoDiscoveredPrefix !== prefix) {
+      this._autoDiscovered = autoDiscoverEntities(this._hass, prefix);
+      this._autoDiscoveredPrefix = prefix;
     }
     return this._autoDiscovered ? this._autoDiscovered[key] : null;
   }
@@ -502,6 +762,14 @@ class ThermalBalanceCard extends HTMLElement {
     const s = this._hass.states[eid];
     if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
     return parseFloat(s.state);
+  }
+
+  _getBoolState(key) {
+    const eid = this._resolveEntity(key);
+    if (!eid || !this._hass || !this._hass.states) return null;
+    const s = this._hass.states[eid];
+    if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
+    return s.state === 'on' || s.state === 'true' || s.state === '1' || s.state === 1;
   }
 
   _getAttr(key, attr) {
@@ -528,9 +796,9 @@ class ThermalBalanceCard extends HTMLElement {
     if (m >= 60) {
       const h = Math.floor(m / 60);
       const rm = m % 60;
-      return rm > 0 ? `${h}h ${rm}m` : `${h}h`;
+      return rm > 0 ? `${h}${this._t('hour_short')} ${rm}${this._t('min_short')}` : `${h}${this._t('hour_short')}`;
     }
-    return `${m} min`;
+    return `${m} ${this._t('min_short')}`;
   }
 
   _balanceColor(v) {
@@ -1247,12 +1515,16 @@ class ThermalBalanceCard extends HTMLElement {
 
   _render() {
     try {
-      if (!this._hass || !this._hass.states) {
+      const prefix = this._derivePrefix();
+      if (!this._autoDiscovered || this._autoDiscoveredPrefix !== prefix) {
+        this._autoDiscovered = autoDiscoverEntities(this._hass, prefix);
+        this._autoDiscoveredPrefix = prefix;
+      }
+
+      if (!this._hass || !this._hass.states || (!this._resolveEntity('heat_gain') && !this._resolveEntity('net_balance') && !this._config.heat_gain)) {
         this._renderPreview();
         return;
       }
-
-      this._autoDiscovered = autoDiscoverEntities(this._hass);
 
       const keys = Object.keys(SENSOR_MAP);
       const parts = keys.map(k => {
@@ -1316,8 +1588,10 @@ class ThermalBalanceCard extends HTMLElement {
       // Cost, Savings & Recommendation states
       const acCost = this._getState('ac_cost');
       const dailySavings = this._getState('daily_savings');
-      const recOpenWin = this._getState('rec_open_window') === 1 || this._getAttr('rec_open_window', 'state') === 'on' || Boolean(this._getAttr('heat_gain', 'recommend_open_window'));
-      const recCloseCur = this._getState('rec_close_curtains') === 1 || this._getAttr('rec_close_curtains', 'state') === 'on' || Boolean(this._getAttr('heat_gain', 'recommend_close_curtains'));
+      const boolRecOpen = this._getBoolState('rec_open_window');
+      const recOpenWin = boolRecOpen !== null ? boolRecOpen : Boolean(this._getAttr('heat_gain', 'recommend_open_window'));
+      const boolRecClose = this._getBoolState('rec_close_curtains');
+      const recCloseCur = boolRecClose !== null ? boolRecClose : Boolean(this._getAttr('heat_gain', 'recommend_close_curtains'));
       const currencySymbol = escapeHtml(this._getAttr('ac_cost', 'unit_of_measurement') || '₴');
 
       // Curtains & Shading attributes
@@ -1354,16 +1628,16 @@ class ThermalBalanceCard extends HTMLElement {
       const acSectionIcon = isHeating ? this._icons.fireLg : this._icons.snowflakeLg;
 
       const acRows = [
-        { label: 'ΔT AC', value: deltaT, unit: '°C', dec: 1, color: '#374151' },
-        { label: hasMeasured ? 'Exit Temp (Meas)' : 'Exit Temp', value: exitTemp, unit: '°C', dec: 1, color: hasMeasured ? (isHeating ? '#FF7A3C' : '#4DA3FF') : '#374151' },
-        ...(hasMeasured ? [{ label: 'Exit Temp (Calc)', value: calcExitTemp, unit: '°C', dec: 1, color: '#FACC15' }] : []),
-        { label: 'Sensible', value: sensible, unit: 'W', dec: 0, color: '#374151' },
-        ...(!isHeating ? [{ label: 'Latent', value: latent, unit: 'W', dec: 0, color: '#374151' }] : []),
-        ...(!isHeating ? [{ label: 'SHR', value: shr, unit: '%', dec: 1, color: '#374151' }] : []),
-        { label: 'Enthalpy', value: enthalpy, unit: 'kJ/kg', dec: 1, color: '#374151' },
-        { label: 'Airflow', value: airflow, unit: 'm³/h', dec: 0, color: '#00C896' },
-        { label: 'Dew Pt In', value: dewIn, unit: '°C', dec: 1, color: '#4DA3FF' },
-        { label: 'Dew Pt Out', value: dewOut, unit: '°C', dec: 1, color: '#4DA3FF' },
+        { label: this._t('ac_dt'), value: deltaT, unit: '°C', dec: 1, color: '#374151' },
+        { label: hasMeasured ? this._t('exit_temp_meas') : this._t('exit_temp'), value: exitTemp, unit: '°C', dec: 1, color: hasMeasured ? (isHeating ? '#FF7A3C' : '#4DA3FF') : '#374151' },
+        ...(hasMeasured ? [{ label: this._t('exit_temp_calc'), value: calcExitTemp, unit: '°C', dec: 1, color: '#FACC15' }] : []),
+        { label: isHeating ? this._t('sensible_heat_heating') : this._t('sensible_heat'), value: sensible, unit: 'W', dec: 0, color: '#374151' },
+        ...(!isHeating ? [{ label: this._t('latent_heat'), value: latent, unit: 'W', dec: 0, color: '#374151' }] : []),
+        ...(!isHeating ? [{ label: this._t('shr'), value: shr, unit: '%', dec: 1, color: '#374151' }] : []),
+        { label: this._t('enthalpy'), value: enthalpy, unit: 'kJ/kg', dec: 1, color: '#374151' },
+        { label: this._t('airflow'), value: airflow, unit: 'm³/h', dec: 0, color: '#00C896' },
+        { label: this._t('dew_point_in'), value: dewIn, unit: '°C', dec: 1, color: '#4DA3FF' },
+        { label: this._t('dew_point_out'), value: dewOut, unit: '°C', dec: 1, color: '#4DA3FF' },
       ];
 
       // Fetch history asynchronously
@@ -1472,7 +1746,7 @@ class ThermalBalanceCard extends HTMLElement {
       if (windSpeed !== null && windSpeed !== undefined) {
         els.vrowWindRow.style.display = 'flex';
         els.vrowWindLbl.textContent = this._t('wind');
-        els.vrowWindVal.innerHTML = `${this._fmt(windSpeed, 1)} m/s <span class="ac-unit">(${this._fmt(windDir, 0)}°)</span>`;
+        els.vrowWindVal.innerHTML = `${this._fmt(windSpeed, 1)} ${this._t('ms_unit')} <span class="ac-unit">(${this._fmt(windDir, 0)}°)</span>`;
       } else {
         els.vrowWindRow.style.display = 'none';
       }
@@ -1480,7 +1754,7 @@ class ThermalBalanceCard extends HTMLElement {
       if (windACH !== null && windACH !== undefined && windowOpen) {
         els.vrowAchRow.style.display = 'flex';
         els.vrowAchLbl.textContent = this._t('air_change');
-        els.vrowAchVal.innerHTML = `${this._fmt(windACH, 1)} <span class="ac-unit">/ h</span>`;
+        els.vrowAchVal.innerHTML = `${this._fmt(windACH, 1)} <span class="ac-unit">${this._t('per_hour')}</span>`;
       } else {
         els.vrowAchRow.style.display = 'none';
       }
@@ -1493,7 +1767,7 @@ class ThermalBalanceCard extends HTMLElement {
         els.vrowCurtainsVal.innerHTML = `${curtainsClosed ? `${this._t('curtains_closed')} (-${curtainReducePct}%)` : this._t('curtains_open')} ${illuminanceLux !== null && illuminanceLux !== undefined ? '<span class="ac-unit">(' + Math.round(illuminanceLux) + ' lx)</span>' : ''}`;
         if (curtainsNote) {
           els.vrowCurtainsNote.style.display = 'block';
-          els.vrowCurtainsNote.textContent = `🌙 ${curtainsNote}`;
+          els.vrowCurtainsNote.textContent = `🌙 ${this._translateCurtainsNote(curtainsNote)}`;
         } else {
           els.vrowCurtainsNote.style.display = 'none';
         }
@@ -1512,7 +1786,7 @@ class ThermalBalanceCard extends HTMLElement {
       els.vrowKVal.innerHTML = empiricalK !== null ? `${this._fmt(empiricalK, 1)} W/K <span class="ac-unit">${empiricalKDev !== null ? '(' + (empiricalKDev > 0 ? '+' : '') + this._fmt(empiricalKDev, 0) + '%)' : ''}</span>` : '—';
 
       els.vrowInsulLbl.textContent = this._t('insulation');
-      els.vrowInsulVal.textContent = empiricalKGrade || this._t('estimated');
+      els.vrowInsulVal.textContent = this._translateGrade(empiricalKGrade);
 
       els.vrowWinKNote.style.display = windowOpen ? 'block' : 'none';
       els.vrowWinKNote.textContent = windowOpen ? `🪟 ${this._t('window_open_k_note')}` : '';
@@ -1552,7 +1826,7 @@ class ThermalBalanceCard extends HTMLElement {
       els.ecardCostLbl.textContent = this._t('ac_cost');
 
       els.ecardShadingVal.textContent = dailySavings !== null ? this._fmt(dailySavings, 2) : '—';
-      els.ecardShadingUnit.textContent = `${currencySymbol}/day`;
+      els.ecardShadingUnit.textContent = `${currencySymbol}${this._t('per_day')}`;
       els.ecardShadingLbl.textContent = this._t('shading_savings');
 
       // ECharts Update without canvas destruction
@@ -1564,6 +1838,8 @@ class ThermalBalanceCard extends HTMLElement {
   }
 
   _renderPreview() {
+    const isRu = (this._hass && (this._hass.locale?.language || this._hass.language) || '').toLowerCase().startsWith('ru');
+    const winClosedText = isRu ? 'Закрыто' : 'Closed';
     this.shadowRoot.innerHTML = `
       <style>${this._css()}</style>
       <ha-card class="cooling-theme">
@@ -1573,7 +1849,7 @@ class ThermalBalanceCard extends HTMLElement {
               <div class="header-icon">${this._icons.thermo}</div>
               <div class="header-text">
                 <div class="header-title">${this._t('title')}</div>
-                <div class="header-sub">COP 3.33 · SHR 85%</div>
+                <div class="header-sub">COP 3.33 · SHR 85% · 🪟 ${winClosedText}</div>
               </div>
             </div>
             <div class="header-badge" style="background:var(--tb-theme-badge-bg); color:var(--tb-theme-accent); border:1px solid var(--tb-theme-border)">
@@ -2044,5 +2320,6 @@ window.customCards.push({
   name: 'Thermal Balance',
   description: 'Thermal balance monitoring card with live metrics and energy tracking.',
   icon: 'mdi:home-thermometer',
-  preview: false,
+  preview: true,
+  documentationURL: 'https://github.com/meksspirt/thermal_balance',
 });

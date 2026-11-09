@@ -1,9 +1,9 @@
 # 🌡️ Thermal Balance — Home Assistant Custom Component & Premium Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/default)
-[![version](https://img.shields.io/badge/version-v2.1.0-blue.svg)](https://github.com/ziffmafiya/thermal_balance/releases/latest)
-[![Tests](https://github.com/ziffmafiya/thermal_balance/actions/workflows/test.yml/badge.svg)](https://github.com/ziffmafiya/thermal_balance/actions)
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=https%3A%2F%2Fgithub.com%2Fziffmafiya%2Fthermal_balance&category=Integration)
+[![version](https://img.shields.io/badge/version-v2.2.0-blue.svg)](https://github.com/meksspirt/thermal_balance/releases/latest)
+[![Tests](https://github.com/meksspirt/thermal_balance/actions/workflows/test.yml/badge.svg)](https://github.com/meksspirt/thermal_balance/actions)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=https%3A%2F%2Fgithub.com%2Fmeksspirt%2Fthermal_balance&category=Integration)
 
 **Thermal Balance** is a physics-based custom integration and Lovelace dashboard card for Home Assistant. It models room thermodynamics as an open system in both **cooling** (summer AC) and **heating** (winter heat pump) modes. It calculates real-time heat flux, clear-sky solar irradiance, Angle of Incidence (AOI) solar geometry, sensible/latent AC heat output, natural ventilation infiltration, smart curtain shading, dynamic $dT/dt$ $K$-factor auto-calibration, temperature shift forecasts, electricity cost tracking, and smart advice alerts.
 
@@ -98,7 +98,7 @@ tests/
 ### Option 1: HACS (Recommended)
 
 1. Open **HACS** $\rightarrow$ **Integrations** $\rightarrow$ **3 dots (top right)** $\rightarrow$ **Custom Repositories**.
-2. Add Repository URL: `https://github.com/ziffmafiya/thermal_balance`
+2. Add Repository URL: `https://github.com/meksspirt/thermal_balance`
 3. Category: **Integration**.
 4. Click **Install**.
 5. Restart Home Assistant.
@@ -136,4 +136,4 @@ title: "Bedroom Climate"    # Optional custom title
 
 ## 📄 License
 
-MIT License © [ziffmafiya](https://github.com/ziffmafiya)
+MIT License © [meksspirt](https://github.com/meksspirt)

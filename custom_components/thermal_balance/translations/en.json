@@ -92,27 +92,17 @@
           "window_azimuth": "Window Facing Azimuth (0°=N, 90°=E, 180°=S, 270°=W)",
           "u_wall": "Wall Thermal Transmittance U (W/m²·K)",
           "u_window": "Window Thermal Transmittance U (W/m²·K)",
-          "use_empirical_hlc": "Auto-calibrate K-Factor (Empirical Measurement)",
-          "hvac_mode": "Default HVAC Operation Mode",
-          "ac_max_cooling": "Max AC Rated Output Capacity (W)",
-          "ac_airflow": "Indoor Unit Airflow Volume (m³/h)",
-          "curtain_type": "Window Shading / Curtain Type",
-          "electricity_rate": "Electricity Tariff (per kWh)",
-          "currency_symbol": "Currency Symbol ($, €, ₴, £)",
-          "illuminance_threshold": "Curtain Auto-Detection Lux Threshold (lx)",
-          "sensor_t_in": "Indoor Air Temperature Sensor (Required)",
-          "sensor_t_out": "Outdoor Air Temperature Sensor (Required)",
-          "sensor_ac_power": "AC Electrical Power Consumption Sensor (Required)",
-          "sensor_climate": "Climate / Thermostat Entity (climate.*, Optional)",
-          "sensor_solar": "Solar Irradiance Sensor (W/m², Optional — Auto-Calculated if empty)",
-          "sensor_weather": "Weather Entity (weather.*, Optional — for Cloud Cover)",
-          "sensor_window": "Window Contact Sensor (binary_sensor.*, Optional)",
-          "sensor_illuminance": "Indoor Illuminance Sensor (lux, Optional)",
-          "sensor_t_ac_exit": "AC Louver Outlet Air Temperature Sensor (Optional)",
-          "sensor_rh_in": "Indoor Relative Humidity Sensor (%, Optional)",
-          "sensor_rh_out": "Outdoor Relative Humidity Sensor (%, Optional)",
-          "sensor_wind_speed": "Wind Speed Sensor (m/s, Optional)",
-          "sensor_wind_direction": "Wind Direction Sensor (degrees, Optional)"
+          "use_empirical_hlc": "Auto-calibrate K-Factor (Empirical Measurement)"
+        },
+        "data_description": {
+          "room_area": "Total usable floor area of the room in square meters (m²).",
+          "ceiling_height": "Vertical height from floor to ceiling in meters.",
+          "window_area": "Total area of all outdoor-facing window glass in square meters (m²).",
+          "external_walls_fraction": "Proportion of room perimeter facing outside (0.25 = 1 wall, 0.50 = corner room, 1.00 = detached building).",
+          "window_azimuth": "Compass direction the primary windows face (0°=North, 90°=East, 180°=South, 270°=West).",
+          "u_wall": "Wall heat transfer coefficient (lower means better insulation, e.g. 0.20-0.35 W/m²·K).",
+          "u_window": "Window glazing heat transfer coefficient (e.g. 1.1 W/m²·K for double-glazed low-e windows).",
+          "use_empirical_hlc": "Enable dynamic learning of real-world room heat loss coefficient based on live thermal response."
         }
       },
       "reconfigure_equipment": {
@@ -126,6 +116,15 @@
           "electricity_rate": "Electricity Tariff (per kWh)",
           "currency_symbol": "Currency Symbol ($, €, ₴, £)",
           "illuminance_threshold": "Curtain Auto-Detection Lux Threshold (lx)"
+        },
+        "data_description": {
+          "hvac_mode": "Primary operational mode: Cooling (summer), Heating (winter heat pump), or Auto (follows thermostat/temperature delta).",
+          "ac_max_cooling": "Maximum thermal cooling/heating capacity of the AC unit in Watts (from manufacturer datasheet, e.g. 3350 W).",
+          "ac_airflow": "Volumetric airflow rate of the indoor AC blower in m³/h (e.g. 370 m³/h).",
+          "curtain_type": "Installed window covering type (Blackout curtains block ~93% solar heat gain, Roller blinds ~74%).",
+          "electricity_rate": "Price per kWh of electrical energy to calculate running costs and shading financial savings.",
+          "currency_symbol": "Currency symbol to display on cost and savings sensors (e.g. $, €, ₴, £).",
+          "illuminance_threshold": "Indoor illuminance level below which curtains are considered closed during daylight hours (default 150 lx)."
         }
       },
       "reconfigure_sensors": {
@@ -145,10 +144,26 @@
           "sensor_rh_out": "Outdoor Relative Humidity Sensor (%, Optional)",
           "sensor_wind_speed": "Wind Speed Sensor (m/s, Optional)",
           "sensor_wind_direction": "Wind Direction Sensor (degrees, Optional)"
+        },
+        "data_description": {
+          "sensor_t_in": "Sensor providing real-time room indoor air temperature in °C.",
+          "sensor_t_out": "Sensor providing outdoor ambient air temperature in °C.",
+          "sensor_ac_power": "Power meter sensor measuring real-time electrical wattage consumed by the AC unit (in Watts).",
+          "sensor_climate": "Climate entity to automatically follow active heating/cooling state in Auto mode.",
+          "sensor_solar": "Pyranometer sensor measuring global solar radiation in W/m² (optional: if omitted, Clear-Sky model calculates it).",
+          "sensor_weather": "Weather provider entity to factor cloud coverage into solar irradiance calculations.",
+          "sensor_window": "Binary sensor detecting open/closed window state for natural ventilation airflow calculations.",
+          "sensor_illuminance": "Indoor light sensor used to automatically detect when window curtains are drawn during daylight.",
+          "sensor_t_ac_exit": "Temperature sensor placed at the indoor unit supply air louver to measure direct AC heat extraction.",
+          "sensor_rh_in": "Indoor humidity sensor used for enthalpy, dew point, and condensate moisture calculations.",
+          "sensor_rh_out": "Outdoor relative humidity sensor used for psychrometric calculations.",
+          "sensor_wind_speed": "Anemometer sensor providing outdoor wind speed for stack and wind pressure ventilation calculations.",
+          "sensor_wind_direction": "Wind vane sensor providing compass direction (0-360°) to calculate direct wind pressure on windows."
         }
       }
     },
     "abort": {
+      "already_configured": "A Thermal Balance monitor for this room indoor temperature sensor is already configured.",
       "reconfigure_successful": "Reconfiguration was successful."
     },
     "error": {
@@ -168,27 +183,7 @@
           "window_azimuth": "Window Facing Azimuth (0°=N, 90°=E, 180°=S, 270°=W)",
           "u_wall": "Wall Thermal Transmittance U (W/m²·K)",
           "u_window": "Window Thermal Transmittance U (W/m²·K)",
-          "use_empirical_hlc": "Auto-calibrate K-Factor (Empirical Measurement)",
-          "hvac_mode": "Default HVAC Operation Mode",
-          "ac_max_cooling": "Max AC Rated Output Capacity (W)",
-          "ac_airflow": "Indoor Unit Airflow Volume (m³/h)",
-          "curtain_type": "Window Shading / Curtain Type",
-          "electricity_rate": "Electricity Tariff (per kWh)",
-          "currency_symbol": "Currency Symbol ($, €, ₴, £)",
-          "illuminance_threshold": "Curtain Auto-Detection Lux Threshold (lx)",
-          "sensor_t_in": "Indoor Air Temperature Sensor (Required)",
-          "sensor_t_out": "Outdoor Air Temperature Sensor (Required)",
-          "sensor_ac_power": "AC Electrical Power Consumption Sensor (Required)",
-          "sensor_climate": "Climate / Thermostat Entity (climate.*, Optional)",
-          "sensor_solar": "Solar Irradiance Sensor (W/m², Optional — Auto-Calculated if empty)",
-          "sensor_weather": "Weather Entity (weather.*, Optional — for Cloud Cover)",
-          "sensor_window": "Window Contact Sensor (binary_sensor.*, Optional)",
-          "sensor_illuminance": "Indoor Illuminance Sensor (lux, Optional)",
-          "sensor_t_ac_exit": "AC Louver Outlet Air Temperature Sensor (Optional)",
-          "sensor_rh_in": "Indoor Relative Humidity Sensor (%, Optional)",
-          "sensor_rh_out": "Outdoor Relative Humidity Sensor (%, Optional)",
-          "sensor_wind_speed": "Wind Speed Sensor (m/s, Optional)",
-          "sensor_wind_direction": "Wind Direction Sensor (degrees, Optional)"
+          "use_empirical_hlc": "Auto-calibrate K-Factor (Empirical Measurement)"
         },
         "data_description": {
           "room_area": "Total usable floor area of the room in square meters (m²).",
@@ -294,14 +289,59 @@
       }
     },
     "sensor": {
+      "instant_heat_gain": {
+        "name": "Heat Gain"
+      },
+      "ac_heat_output": {
+        "name": "AC Cooling"
+      },
+      "instant_net_balance": {
+        "name": "Net Balance"
+      },
+      "ac_carnot_cop": {
+        "name": "AC COP"
+      },
+      "time_to_1deg": {
+        "name": "Time to 1°C"
+      },
+      "daily_thermal_balance": {
+        "name": "Daily Balance"
+      },
+      "net_thermal_balance": {
+        "name": "Total Balance"
+      },
+      "total_heat_absorbed": {
+        "name": "Heat Absorbed"
+      },
+      "ac_thermal_energy_total": {
+        "name": "AC Energy"
+      },
+      "ac_condensation_rate": {
+        "name": "Condensation Rate"
+      },
+      "empirical_k_factor": {
+        "name": "Empirical K-Factor"
+      },
       "equilibrium_temperature": {
         "name": "Equilibrium Temperature"
       },
       "required_ac_power": {
         "name": "Required AC Power"
+      },
+      "ac_energy_cost": {
+        "name": "AC Energy Cost"
+      },
+      "shading_daily_savings": {
+        "name": "Shading Daily Savings"
       }
     },
     "binary_sensor": {
+      "recommend_open_window": {
+        "name": "Open Window Recommended"
+      },
+      "recommend_close_curtains": {
+        "name": "Close Curtains Recommended"
+      },
       "insufficient_cooling_capacity": {
         "name": "Insufficient HVAC Capacity"
       }

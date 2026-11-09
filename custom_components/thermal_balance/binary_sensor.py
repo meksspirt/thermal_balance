@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,11 +21,16 @@ from .const import (
     BINARY_SENSOR_RECOMMEND_CLOSE_CURTAINS,
     BINARY_SENSOR_RECOMMEND_OPEN_WINDOW,
     DOMAIN,
+    SENSOR_AC_CARNOT_COP,
+    SENSOR_INSTANT_HEAT_GAIN,
     SENSOR_REQUIRED_AC_POWER,
 )
 from .coordinator import ThermalBalanceCoordinator
+from .model import CURTAIN_TYPE_FACTORS
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES: Final = 0
 
 
 @dataclass(frozen=True)
@@ -36,19 +41,16 @@ class ThermalBalanceBinarySensorDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_TYPES: tuple[ThermalBalanceBinarySensorDescription, ...] = (
     ThermalBalanceBinarySensorDescription(
         key=BINARY_SENSOR_RECOMMEND_OPEN_WINDOW,
-        name="Open Window Recommended",
-        icon="mdi:window-open-variant",
+        translation_key=BINARY_SENSOR_RECOMMEND_OPEN_WINDOW,
     ),
     ThermalBalanceBinarySensorDescription(
         key=BINARY_SENSOR_RECOMMEND_CLOSE_CURTAINS,
-        name="Close Curtains Recommended",
-        icon="mdi:curtains-closed",
+        translation_key=BINARY_SENSOR_RECOMMEND_CLOSE_CURTAINS,
     ),
     ThermalBalanceBinarySensorDescription(
         key=BINARY_SENSOR_INSUFFICIENT_COOLING_CAPACITY,
-        name="Insufficient HVAC Capacity",
+        translation_key=BINARY_SENSOR_INSUFFICIENT_COOLING_CAPACITY,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:alert-circle-outline",
     ),
 )
 
@@ -115,12 +117,21 @@ class ThermalBalanceBinarySensor(CoordinatorEntity[ThermalBalanceCoordinator], B
             rate = self.coordinator.electricity_rate
             symbol = self.coordinator.currency_symbol
 
-            factors = self.coordinator.data
-            saved_fraction = 0.52
-            curtain_factors = self.coordinator.extra_attributes.get(key, {})
-            
-            pot_w = self.coordinator.geometry.window_area * solar * 0.52
-            saved_kwh_day = (pot_w / 3.2 / 1000.0) * 12.0
+            curtain_factors = CURTAIN_TYPE_FACTORS.get(
+                self.coordinator.curtain_type, CURTAIN_TYPE_FACTORS["roller_gaps"]
+            )
+            saved_fraction = curtain_factors[1]
+
+            # Use AOI-calculated incident solar radiation on window
+            heat_gain_attrs = self.coordinator.extra_attributes.get(SENSOR_INSTANT_HEAT_GAIN, {})
+            p_solar_current = heat_gain_attrs.get("p_solar_w", 0.0)
+            g_current = heat_gain_attrs.get("g_solar_factor", 0.70)
+            incident_solar_w = p_solar_current / max(0.01, g_current) if g_current > 0 else 0.0
+            pot_w = incident_solar_w * saved_fraction
+
+            cop_raw = self.coordinator.data.get(SENSOR_AC_CARNOT_COP, 3.2)
+            cop = cop_raw if cop_raw and cop_raw > 0 else 3.2
+            saved_kwh_day = (pot_w / cop / 1000.0) * 12.0
             saved_cost_day = saved_kwh_day * rate
 
             if self.is_on:

@@ -274,5 +274,5 @@ title: "Климат Спальни"     # Пользовательский за
 ---
 
 ### 🔗 Полезные ссылки:
-* **Репозиторий на GitHub**: [github.com/ziffmafiya/thermal_balance](https://github.com/ziffmafiya/thermal_balance)
-* **Последний Релиз**: [v1.2.5 Release](https://github.com/ziffmafiya/thermal_balance/releases/latest)
+* **Репозиторий на GitHub**: [github.com/meksspirt/thermal_balance](https://github.com/meksspirt/thermal_balance)
+* **Последний Релиз**: [v2.2.0 Release](https://github.com/meksspirt/thermal_balance/releases/latest)

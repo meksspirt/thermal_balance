@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,6 +48,8 @@ from .coordinator import ThermalBalanceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES: Final = 0
+
 
 @dataclass(frozen=True)
 class ThermalBalanceSensorEntityDescription(SensorEntityDescription):
@@ -53,7 +61,7 @@ class ThermalBalanceSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_INSTANT_HEAT_GAIN,
-        name="Heat Gain",
+        translation_key=SENSOR_INSTANT_HEAT_GAIN,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -61,7 +69,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_AC_HEAT_OUTPUT,
-        name="AC Cooling",
+        translation_key=SENSOR_AC_HEAT_OUTPUT,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -69,7 +77,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_INSTANT_NET_BALANCE,
-        name="Net Balance",
+        translation_key=SENSOR_INSTANT_NET_BALANCE,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -77,7 +85,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_AC_CARNOT_COP,
-        name="AC COP",
+        translation_key=SENSOR_AC_CARNOT_COP,
         native_unit_of_measurement=None,
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
@@ -85,7 +93,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_TIME_TO_1DEG,
-        name="Time to 1°C",
+        translation_key=SENSOR_TIME_TO_1DEG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -93,7 +101,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_DAILY_THERMAL_BALANCE,
-        name="Daily Balance",
+        translation_key=SENSOR_DAILY_THERMAL_BALANCE,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -102,7 +110,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_NET_THERMAL_BALANCE,
-        name="Total Balance",
+        translation_key=SENSOR_NET_THERMAL_BALANCE,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -111,7 +119,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_TOTAL_HEAT_ABSORBED,
-        name="Heat Absorbed",
+        translation_key=SENSOR_TOTAL_HEAT_ABSORBED,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -120,7 +128,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_AC_THERMAL_ENERGY_TOTAL,
-        name="AC Energy",
+        translation_key=SENSOR_AC_THERMAL_ENERGY_TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -129,7 +137,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_AC_CONDENSATION_RATE,
-        name="Condensation Rate",
+        translation_key=SENSOR_AC_CONDENSATION_RATE,
         native_unit_of_measurement="L/h",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
@@ -137,16 +145,17 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_EMPIRICAL_K_FACTOR,
-        name="Empirical K-Factor",
+        translation_key=SENSOR_EMPIRICAL_K_FACTOR,
         native_unit_of_measurement="W/K",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         is_restorable=True,
         suggested_display_precision=2,
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_EQUILIBRIUM_TEMPERATURE,
-        name="Equilibrium Temperature",
+        translation_key=SENSOR_EQUILIBRIUM_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -154,7 +163,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_REQUIRED_AC_POWER,
-        name="Required AC Power",
+        translation_key=SENSOR_REQUIRED_AC_POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -162,7 +171,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_AC_ENERGY_COST,
-        name="AC Energy Cost",
+        translation_key=SENSOR_AC_ENERGY_COST,
         native_unit_of_measurement=None,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
@@ -171,7 +180,7 @@ SENSOR_TYPES: tuple[ThermalBalanceSensorEntityDescription, ...] = (
     ),
     ThermalBalanceSensorEntityDescription(
         key=SENSOR_SHADING_DAILY_SAVINGS,
-        name="Shading Daily Savings",
+        translation_key=SENSOR_SHADING_DAILY_SAVINGS,
         native_unit_of_measurement=None,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,

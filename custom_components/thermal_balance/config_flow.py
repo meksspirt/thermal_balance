@@ -344,11 +344,39 @@ class ThermalBalanceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Step 3: Required and Optional Sensors."""
         errors: dict[str, str] = {}
+        hass = getattr(self, "hass", None)
 
         if user_input is not None:
-            self._data.update(user_input)
-            title = f"Thermal Balance ({self._data.get(CONF_ROOM_AREA, 20)} m²)"
-            return self.async_create_entry(title=title, data=self._data)
+            if hass and hasattr(hass, "states"):
+                for req_key in (CONF_SENSOR_T_IN, CONF_SENSOR_T_OUT, CONF_SENSOR_AC_POWER):
+                    eid = user_input.get(req_key)
+                    if not eid or hass.states.get(eid) is None:
+                        errors[req_key] = "invalid_sensor"
+
+                for opt_key in (
+                    CONF_SENSOR_CLIMATE,
+                    CONF_SENSOR_SOLAR,
+                    CONF_SENSOR_WEATHER,
+                    CONF_SENSOR_WINDOW,
+                    CONF_SENSOR_ILLUMINANCE,
+                    CONF_SENSOR_T_AC_EXIT,
+                    CONF_SENSOR_RH_IN,
+                    CONF_SENSOR_RH_OUT,
+                    CONF_SENSOR_WIND_SPEED,
+                    CONF_SENSOR_WIND_DIRECTION,
+                ):
+                    eid = user_input.get(opt_key)
+                    if eid and hass.states.get(eid) is None:
+                        errors[opt_key] = "invalid_sensor"
+
+            if not errors:
+                self._data.update(user_input)
+                unique_id = f"thermal_balance_{self._data[CONF_SENSOR_T_IN]}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                title = f"Thermal Balance ({self._data.get(CONF_ROOM_AREA, 20)} m²)"
+                return self.async_create_entry(title=title, data=self._data)
 
         return self.async_show_form(
             step_id="sensors",
@@ -398,14 +426,38 @@ class ThermalBalanceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step 3 of reconfiguration: Sensors & Weather."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
+        hass = getattr(self, "hass", None)
 
         if user_input is not None:
-            self._data.update(user_input)
-            return self.async_update_reload_and_abort(
-                entry,
-                data={**entry.data, **self._data},
-                reason="reconfigure_successful",
-            )
+            if hass and hasattr(hass, "states"):
+                for req_key in (CONF_SENSOR_T_IN, CONF_SENSOR_T_OUT, CONF_SENSOR_AC_POWER):
+                    eid = user_input.get(req_key)
+                    if not eid or hass.states.get(eid) is None:
+                        errors[req_key] = "invalid_sensor"
+
+                for opt_key in (
+                    CONF_SENSOR_CLIMATE,
+                    CONF_SENSOR_SOLAR,
+                    CONF_SENSOR_WEATHER,
+                    CONF_SENSOR_WINDOW,
+                    CONF_SENSOR_ILLUMINANCE,
+                    CONF_SENSOR_T_AC_EXIT,
+                    CONF_SENSOR_RH_IN,
+                    CONF_SENSOR_RH_OUT,
+                    CONF_SENSOR_WIND_SPEED,
+                    CONF_SENSOR_WIND_DIRECTION,
+                ):
+                    eid = user_input.get(opt_key)
+                    if eid and hass.states.get(eid) is None:
+                        errors[opt_key] = "invalid_sensor"
+
+            if not errors:
+                self._data.update(user_input)
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={**entry.data, **self._data},
+                    reason="reconfigure_successful",
+                )
 
         return self.async_show_form(
             step_id="reconfigure_sensors",
@@ -419,7 +471,7 @@ class ThermalBalanceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get options flow for this handler."""
-        return ThermalBalanceOptionsFlow(config_entry)
+        return ThermalBalanceOptionsFlow()
 
 
 class ThermalBalanceOptionsFlow(config_entries.OptionsFlow):
@@ -428,14 +480,12 @@ class ThermalBalanceOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
         """Initialize options flow."""
         if config_entry is not None:
-            self._config_entry = config_entry
+            self.config_entry = config_entry
         self._data: dict[str, Any] = {}
 
     @property
     def current_config_entry(self) -> config_entries.ConfigEntry:
         """Return active config entry."""
-        if hasattr(self, "_config_entry") and self._config_entry is not None:
-            return self._config_entry
         return getattr(self, "config_entry", None)
 
     async def async_step_init(

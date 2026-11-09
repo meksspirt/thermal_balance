@@ -124,6 +124,21 @@ class MockConfigEntries:
     def add(self, entry: Any) -> None:
         self._entries.append(entry)
 
+    def async_update_entry(
+        self,
+        entry: Any,
+        *,
+        data: dict[str, Any] | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> None:
+        if data is not None:
+            entry.data = data
+        if options is not None:
+            entry.options = options
+        if hasattr(entry, "_update_listeners"):
+            for listener in entry._update_listeners:
+                listener(None, entry)
+
 
 class MockHomeAssistant:
     """Mock Home Assistant instance."""
@@ -133,7 +148,12 @@ class MockHomeAssistant:
         self.config = MockConfig()
         self.services = MockServiceRegistry()
         self.config_entries = MockConfigEntries()
+        from unittest.mock import AsyncMock
         self.http = MagicMock()
+        self.http.async_register_static_paths = AsyncMock()
+
+    async def async_add_executor_job(self, target: Callable[..., Any], *args: Any) -> Any:
+        return target(*args)
 
 
 class MockConfigEntry:
@@ -145,12 +165,19 @@ class MockConfigEntry:
         data: dict[str, Any] | None = None,
         options: dict[str, Any] | None = None,
         title: str = "Thermal Balance",
+        unique_id: str | None = None,
     ) -> None:
         self.entry_id = entry_id
         self.data = data or {}
         self.options = options or {}
         self.title = title
+        self.unique_id = unique_id
         self.runtime_data: Any = None
+        self._update_listeners: list[Callable] = []
+
+    def add_update_listener(self, listener: Callable) -> Callable:
+        self._update_listeners.append(listener)
+        return lambda: self._update_listeners.remove(listener)
 
 
 class Platform(StrEnum):
@@ -193,10 +220,15 @@ def setup_mock_homeassistant() -> None:
         HOURS = "h"
         SECONDS = "s"
 
+    class EntityCategory(StrEnum):
+        CONFIG = "config"
+        DIAGNOSTIC = "diagnostic"
+
     ha_const.UnitOfEnergy = MockUnitOfEnergy
     ha_const.UnitOfPower = MockUnitOfPower
     ha_const.UnitOfTemperature = MockUnitOfTemperature
     ha_const.UnitOfTime = MockUnitOfTime
+    ha_const.EntityCategory = EntityCategory
 
     ha_core = ModuleType("homeassistant.core")
     ha_core.__path__ = []
@@ -234,6 +266,7 @@ def setup_mock_homeassistant() -> None:
                 setattr(self, k, v)
 
     ha_helpers_entity.DeviceInfo = MockDeviceInfo
+    ha_helpers_entity.EntityCategory = EntityCategory
 
     class MockRestoreEntity:
         async def async_get_last_state(self) -> Any:
@@ -247,6 +280,16 @@ def setup_mock_homeassistant() -> None:
 
         def __class_getitem__(cls, item: Any) -> Any:
             return cls
+
+        @property
+        def available(self) -> bool:
+            if self.coordinator is not None:
+                return getattr(self.coordinator, "last_update_success", True)
+            return True
+
+        @property
+        def entity_category(self) -> Any:
+            return getattr(self, "_attr_entity_category", None)
 
         async def async_added_to_hass(self) -> None:
             pass
@@ -269,12 +312,24 @@ def setup_mock_homeassistant() -> None:
             self.update_interval = update_interval
             self.always_update = always_update
             self.data: dict[str, Any] = {}
+            self.last_update_success: bool = True
+            self._listeners: list[Callable] = []
 
         def __class_getitem__(cls, item: Any) -> Any:
             return cls
 
+        def async_add_listener(self, update_callback: Callable, context: Any = None) -> Callable:
+            self._listeners.append(update_callback)
+            return lambda: self._listeners.remove(update_callback)
+
+        def async_update_listeners(self) -> None:
+            for listener in list(self._listeners):
+                listener()
+
         def async_set_updated_data(self, data: dict[str, Any]) -> None:
+            self.last_update_success = True
             self.data = data
+            self.async_update_listeners()
 
     ha_helpers_update_coordinator.DataUpdateCoordinator = MockDataUpdateCoordinator
     ha_helpers_update_coordinator.UpdateFailed = Exception
@@ -328,9 +383,83 @@ def setup_mock_homeassistant() -> None:
     ha_components_sensor.SensorEntity = MockSensorEntity
 
     ha_components_binary_sensor = ModuleType("homeassistant.components.binary_sensor")
+    class MockBinarySensorDeviceClass(StrEnum):
+        PROBLEM = "problem"
+        WINDOW = "window"
+        RUNNING = "running"
+
+    @dataclass(frozen=True, kw_only=True)
+    class MockBinarySensorEntityDescription:
+        key: str = ""
+        name: str | None = None
+        device_class: Any = None
+        translation_key: str | None = None
+        icon: str | None = None
+        entity_category: Any = None
+
+    class MockBinarySensorEntity:
+        pass
+
+    ha_components_binary_sensor.BinarySensorDeviceClass = MockBinarySensorDeviceClass
+    ha_components_binary_sensor.BinarySensorEntityDescription = MockBinarySensorEntityDescription
+    ha_components_binary_sensor.BinarySensorEntity = MockBinarySensorEntity
+
     ha_components_button = ModuleType("homeassistant.components.button")
+    @dataclass(frozen=True, kw_only=True)
+    class MockButtonEntityDescription:
+        key: str = ""
+        name: str | None = None
+        translation_key: str | None = None
+        icon: str | None = None
+        entity_category: Any = None
+
+    class MockButtonEntity:
+        pass
+
+    ha_components_button.ButtonEntityDescription = MockButtonEntityDescription
+    ha_components_button.ButtonEntity = MockButtonEntity
+
     ha_components_number = ModuleType("homeassistant.components.number")
+    class MockNumberMode(StrEnum):
+        AUTO = "auto"
+        BOX = "box"
+        SLIDER = "slider"
+
+    @dataclass(frozen=True, kw_only=True)
+    class MockNumberEntityDescription:
+        key: str = ""
+        name: str | None = None
+        translation_key: str | None = None
+        icon: str | None = None
+        native_min_value: float = 0.0
+        native_max_value: float = 100.0
+        native_step: float = 1.0
+        native_unit_of_measurement: str | None = None
+        mode: str = "auto"
+        entity_category: Any = None
+
+    class MockNumberEntity:
+        pass
+
+    ha_components_number.NumberMode = MockNumberMode
+    ha_components_number.NumberEntityDescription = MockNumberEntityDescription
+    ha_components_number.NumberEntity = MockNumberEntity
+
     ha_components_select = ModuleType("homeassistant.components.select")
+    @dataclass(frozen=True, kw_only=True)
+    class MockSelectEntityDescription:
+        key: str = ""
+        name: str | None = None
+        translation_key: str | None = None
+        icon: str | None = None
+        options: list[str] | None = None
+        entity_category: Any = None
+
+    class MockSelectEntity:
+        pass
+
+    ha_components_select.SelectEntityDescription = MockSelectEntityDescription
+    ha_components_select.SelectEntity = MockSelectEntity
 
     ha_util = ModuleType("homeassistant.util")
     ha_util.__path__ = []
@@ -359,23 +488,38 @@ def setup_mock_homeassistant() -> None:
                 cls.DOMAIN = domain
 
         def __init__(self) -> None:
-            self._reconfigure_entry = None
+            self.hass: Any = None
+            self._reconfigure_entry: Any = None
+            self.unique_id: str | None = None
 
         def _get_reconfigure_entry(self) -> Any:
             return self._reconfigure_entry
+
+        async def async_set_unique_id(self, unique_id: str | None = None, *, raise_on_progress: bool = True) -> None:
+            self.unique_id = unique_id
+
+        def _abort_if_unique_id_configured(self, updates: dict[str, Any] | None = None, reload_on_update: bool = True) -> None:
+            if hasattr(self, "hass") and self.hass and hasattr(self.hass, "config_entries"):
+                for entry in self.hass.config_entries.async_entries(getattr(self, "DOMAIN", "thermal_balance")):
+                    if getattr(entry, "unique_id", None) == self.unique_id:
+                        raise AbortFlow("already_configured")
 
         def async_show_form(self, step_id: str, data_schema: Any, errors: dict[str, str] | None = None) -> dict[str, Any]:
             return {"type": "form", "step_id": step_id, "data_schema": data_schema, "errors": errors or {}}
 
         def async_create_entry(self, title: str, data: dict[str, Any]) -> dict[str, Any]:
             return {"type": "create_entry", "title": title, "data": data}
+
+        def async_abort(self, *, reason: str, description_placeholders: dict[str, str] | None = None) -> dict[str, Any]:
+            return {"type": "abort", "reason": reason}
 
         def async_update_reload_and_abort(self, entry: Any, data: dict[str, Any], reason: str) -> dict[str, Any]:
             return {"type": "abort", "reason": reason, "data": data}
 
     class BaseOptionsFlow:
         def __init__(self, config_entry: Any = None) -> None:
-            self.config_entry = config_entry
+            if config_entry is not None:
+                self.config_entry = config_entry
 
         def async_show_form(self, step_id: str, data_schema: Any, errors: dict[str, str] | None = None) -> dict[str, Any]:
             return {"type": "form", "step_id": step_id, "data_schema": data_schema, "errors": errors or {}}
@@ -383,6 +527,15 @@ def setup_mock_homeassistant() -> None:
         def async_create_entry(self, title: str, data: dict[str, Any]) -> dict[str, Any]:
             return {"type": "create_entry", "title": title, "data": data}
 
+    class AbortFlow(Exception):
+        def __init__(self, reason: str, description_placeholders: dict[str, str] | None = None) -> None:
+            super().__init__(reason)
+            self.reason = reason
+            self.description_placeholders = description_placeholders
+
+    ha_data_entry_flow = ModuleType("homeassistant.data_entry_flow")
+    ha_data_entry_flow.AbortFlow = AbortFlow
+    ha_config_entries.AbortFlow = AbortFlow
     ha_config_entries.ConfigFlow = BaseConfigFlow
     ha_config_entries.OptionsFlow = BaseOptionsFlow
     ha_config_entries.ConfigEntry = MockConfigEntry
@@ -484,5 +637,6 @@ def setup_mock_homeassistant() -> None:
     sys.modules["homeassistant.components.button"] = ha_components_button
     sys.modules["homeassistant.components.number"] = ha_components_number
     sys.modules["homeassistant.components.select"] = ha_components_select
+    sys.modules["homeassistant.data_entry_flow"] = ha_data_entry_flow
     sys.modules["homeassistant.util"] = ha_util
     sys.modules["homeassistant.util.dt"] = ha_util_dt
